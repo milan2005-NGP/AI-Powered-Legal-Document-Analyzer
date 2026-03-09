@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LexAI – Legal Intelligence Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:#03040d;color:#e2e8f0;font-family:'Georgia',serif;}
+    @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+    @keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    .fi{animation:fi 0.35s ease;}
+    .card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:16px;}
+    .tab{background:none;border:none;cursor:pointer;padding:8px 14px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;transition:all 0.2s;color:rgba(255,255,255,0.3);}
+    .tab.on{background:rgba(99,102,241,0.14);color:#818cf8;}
+    textarea,input[type=text]{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:11px 13px;color:#e2e8f0;font-family:'Georgia',serif;font-size:13px;outline:none;width:100%;}
+    textarea:focus,input[type=text]:focus{border-color:rgba(99,102,241,0.4);}
+    select{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 12px;color:#e2e8f0;font-family:'JetBrains Mono',monospace;font-size:11px;outline:none;width:100%;}
+    .primary-btn{background:linear-gradient(135deg,#4338ca,#6366f1);border:none;border-radius:10px;padding:12px 20px;color:white;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;cursor:pointer;text-transform:uppercase;transition:all 0.2s;box-shadow:0 4px 16px rgba(99,102,241,0.3);width:100%;}
+    .primary-btn:hover{box-shadow:0 6px 22px rgba(99,102,241,0.46);}
+    .primary-btn:disabled{opacity:0.3;cursor:not-allowed;box-shadow:none;}
+    .chat-input{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:10px;padding:11px 13px;color:#e2e8f0;font-family:'Georgia',serif;font-size:13px;flex:1;outline:none;}
+    .chat-input:focus{border-color:rgba(99,102,241,0.38);}
+    .send{background:rgba(99,102,241,0.28);border:1px solid rgba(99,102,241,0.38);border-radius:9px;padding:11px 16px;color:#a5b4fc;cursor:pointer;font-size:15px;transition:all 0.2s;}
+    .send:hover{background:rgba(99,102,241,0.46);}
+    .score-ring{width:76px;height:76px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+    .score-inner{width:56px;height:56px;border-radius:50%;background:#03040d;display:flex;align-items:center;justify-content:center;flex-direction:column;}
+    .quick-btn{background:rgba(99,102,241,0.07);border:1px solid rgba(99,102,241,0.16);border-radius:16px;padding:6px 12px;color:rgba(255,255,255,0.42);cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:10px;transition:all 0.2s;}
+    .quick-btn:hover{background:rgba(99,102,241,0.18);color:rgba(255,255,255,0.7);}
+    .result-box{background:rgba(255,255,255,0.022);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px;max-height:260px;overflow-y:auto;}
+    .toolbar{display:flex;flex-wrap:wrap;gap:8px;padding:12px;background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.14);border-radius:12px;}
+    .lang-chip{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:5px 10px;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;color:rgba(255,255,255,0.45);transition:all 0.2s;}
+    .lang-chip.on{background:rgba(99,102,241,0.2);border-color:#6366f1;color:#a5b4fc;}
+    ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:rgba(99,102,241,0.2);border-radius:2px;}
+
+    /* API KEY BANNER */
+    .api-banner{background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.25);border-radius:12px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .api-input{background:rgba(0,0,0,0.3);border:1px solid rgba(99,102,241,0.3);border-radius:8px;padding:7px 12px;color:#e2e8f0;font-family:'JetBrains Mono',monospace;font-size:11px;flex:1;outline:none;min-width:200px;}
+    .api-input:focus{border-color:#6366f1;}
+    .api-save-btn{background:rgba(99,102,241,0.2);border:1px solid rgba(99,102,241,0.4);border-radius:8px;padding:7px 14px;color:#a5b4fc;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;transition:all 0.2s;}
+    .api-save-btn:hover{background:rgba(99,102,241,0.35);}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useRef } = React;
+
+const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+
+async function callGroq(messages, system, apiKey, maxTokens=1200) {
+  const res = await fetch(GROQ_URL, {
+    method:"POST",
+    headers:{"Content-Type":"application/json","Authorization":`Bearer ${apiKey}`},
+    body: JSON.stringify({
+      model:"llama-3.3-70b-versatile", max_tokens:maxTokens,
+      messages:[{role:"system",content:system},...messages],
+    }),
+  });
+  const d = await res.json();
+  if (d.error) return "⚠ API Error: " + (d.error.message||"Check your API key");
+  return d.choices?.[0]?.message?.content || "";
+}
+
+const TEMPLATES = [
+  {id:"nda",label:"NDA",full:"Non-Disclosure Agreement",icon:"🔒",color:"#8b5cf6"},
+  {id:"employment",label:"Employment",full:"Employment Contract",icon:"💼",color:"#3b82f6"},
+  {id:"rental",label:"Rental",full:"Rental Agreement",icon:"🏠",color:"#06b6d4"},
+  {id:"service",label:"Service",full:"Service Agreement",icon:"🤝",color:"#10b981"},
+];
+const RISK_COLORS={High:"#f43f5e",Medium:"#f97316",Low:"#22c55e"};
+const RISK_BG={High:"rgba(244,63,94,0.12)",Medium:"rgba(249,115,22,0.12)",Low:"rgba(34,197,94,0.12)"};
+
+function RiskBadge({level}){
+  return <span style={{background:RISK_BG[level],border:`1px solid ${RISK_COLORS[level]}45`,color:RISK_COLORS[level],borderRadius:6,padding:"2px 9px",fontSize:10,fontFamily:"monospace",fontWeight:700}}>{level}</span>;
+}
+
+function Loader({text="Processing"}){
+  return (
+    <div style={{display:"flex",alignItems:"center",gap:10,padding:"12px 16px",background:"rgba(99,102,241,0.07)",border:"1px solid rgba(99,102,241,0.18)",borderRadius:12}}>
+      <div style={{width:14,height:14,border:"2px solid rgba(99,102,241,0.3)",borderTop:"2px solid #818cf8",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
+      <span style={{fontSize:11,color:"#818cf8",fontFamily:"monospace",letterSpacing:1}}>{text}…</span>
+    </div>
+  );
+}
+
+function ActionBtn({icon,label,onClick,color="#6366f1",disabled,small}){
+  return (
+    <button onClick={onClick} disabled={disabled}
+      style={{background:`${color}18`,border:`1px solid ${color}40`,borderRadius:small?8:10,padding:small?"7px 12px":"10px 16px",color,cursor:disabled?"not-allowed":"pointer",fontFamily:"monospace",fontSize:small?10:11,letterSpacing:1,display:"flex",alignItems:"center",gap:6,transition:"all 0.2s",opacity:disabled?0.35:1,whiteSpace:"nowrap"}}
+      onMouseEnter={e=>{if(!disabled)e.currentTarget.style.background=`${color}30`;}}
+      onMouseLeave={e=>{if(!disabled)e.currentTarget.style.background=`${color}18`;}}>
+      <span style={{fontSize:small?12:14}}>{icon}</span>{label}
+    </button>
+  );
+}
+
+function App(){
+  const [tab,setTab]=useState("analyze");
+  const [apiKey,setApiKey]=useState("");
+  const [apiInput,setApiInput]=useState("");
+  const [apiSaved,setApiSaved]=useState(false);
+  const [docText,setDocText]=useState("");
+  const [analysis,setAnalysis]=useState(null);
+  const [analyzing,setAnalyzing]=useState(false);
+  const [summary,setSummary]=useState("");
+  const [summarizing,setSummarizing]=useState(false);
+  const [simplifiedText,setSimplifiedText]=useState("");
+  const [simplifying,setSimplifying]=useState(false);
+  const [redFlags,setRedFlags]=useState([]);
+  const [redFlagging,setRedFlagging]=useState(false);
+  const [translatedDoc,setTranslatedDoc]=useState("");
+  const [translating,setTranslating]=useState(false);
+  const [transLang,setTransLang]=useState("Tamil");
+  const [showTransPanel,setShowTransPanel]=useState(false);
+  const [doc2Text,setDoc2Text]=useState("");
+  const [compareResult,setCompareResult]=useState("");
+  const [comparing,setComparing]=useState(false);
+  const [comparingPane,setComparingPane]=useState(false);
+  const [generatedDoc,setGeneratedDoc]=useState("");
+  const [generating,setGenerating]=useState(false);
+  const [genForm,setGenForm]=useState({type:"nda",party1:"",party2:"",duration:"1 year",jurisdiction:"India"});
+  const [copied,setCopied]=useState(false);
+  const [chatMsgs,setChatMsgs]=useState([]);
+  const [chatInput,setChatInput]=useState("");
+  const [chatLoading,setChatLoading]=useState(false);
+  const chatRef=useRef(null);
+
+  React.useEffect(()=>{
+    try{const k=localStorage.getItem("lex_groq_key");if(k){setApiKey(k);setApiInput(k);setApiSaved(true);}}catch{}
+  },[]);
+
+  const saveApiKey=()=>{
+    if(!apiInput.trim())return;
+    setApiKey(apiInput.trim());setApiSaved(true);
+    try{localStorage.setItem("lex_groq_key",apiInput.trim());}catch{}
+  };
+
+  const sys="You are LexAI, an expert legal document AI. Be precise, professional, plain-English where needed.";
+
+  const handleAnalyze=async()=>{
+    if(!docText.trim()||!apiKey)return;
+    setAnalyzing(true);setAnalysis(null);setSummary("");setSimplifiedText("");setRedFlags([]);setTranslatedDoc("");setCompareResult("");
+    const result=await callGroq([{role:"user",content:`Analyze this legal document and respond ONLY in JSON:\n\n${docText}\n\nFormat:\n{"summary":"2 sentence summary","riskLevel":"High|Medium|Low","keyRisks":[{"clause":"name","risk":"description","level":"High|Medium|Low"}],"obligations":["obligation"],"missingClauses":["missing"],"recommendations":["rec"],"score":5}`}],
+      "You are an expert legal document analyst. Respond ONLY with valid JSON, no markdown, no extra text.",apiKey);
+    try{const c=result.replace(/```json|```/g,"").trim();setAnalysis(JSON.parse(c));}
+    catch{setAnalysis({summary:result,riskLevel:"Medium",keyRisks:[],obligations:[],missingClauses:[],recommendations:[],score:5});}
+    setAnalyzing(false);
+  };
+
+  const handleSummarize=async()=>{
+    if(!docText.trim()||!apiKey)return;setSummarizing(true);
+    const res=await callGroq([{role:"user",content:`Summarize this legal document in 5 clear bullet points a non-lawyer can understand:\n\n${docText}`}],sys,apiKey);
+    setSummary(res);setSummarizing(false);
+  };
+
+  const handleSimplify=async()=>{
+    if(!docText.trim()||!apiKey)return;setSimplifying(true);
+    const res=await callGroq([{role:"user",content:`Rewrite this legal document in plain simple English. Keep all key terms but remove legal jargon:\n\n${docText}`}],sys,apiKey,1500);
+    setSimplifiedText(res);setSimplifying(false);
+  };
+
+  const handleRedFlags=async()=>{
+    if(!docText.trim()||!apiKey)return;setRedFlagging(true);
+    const res=await callGroq([{role:"user",content:`List ONLY the biggest red flag clauses as JSON array: [{"flag":"title","detail":"explanation","severity":"High|Medium"}]\n\n${docText}`}],
+      "You are a legal risk expert. Respond ONLY with JSON array, no markdown.",apiKey);
+    try{const c=res.replace(/```json|```/g,"").trim();setRedFlags(JSON.parse(c));}
+    catch{setRedFlags([{flag:"Analysis Note",detail:res,severity:"Medium"}]);}
+    setRedFlagging(false);
+  };
+
+  const handleTranslate=async()=>{
+    if(!docText.trim()||!apiKey)return;setTranslating(true);
+    const res=await callGroq([{role:"user",content:`Translate the key points and obligations of this legal document into ${transLang}. Keep it clear and accurate:\n\n${docText}`}],sys,apiKey,1500);
+    setTranslatedDoc(res);setTranslating(false);setShowTransPanel(false);
+  };
+
+  const handleCompare=async()=>{
+    if(!docText.trim()||!doc2Text.trim()||!apiKey)return;setComparing(true);
+    const res=await callGroq([{role:"user",content:`Compare these two legal documents and highlight: key differences, which is more favorable, missing clauses in each.\n\nDocument 1:\n${docText}\n\nDocument 2:\n${doc2Text}`}],sys,apiKey,1500);
+    setCompareResult(res);setComparing(false);
+  };
+
+  const handleGenerate=async()=>{
+    if(!genForm.party1||!genForm.party2||!apiKey)return;setGenerating(true);
+    const tmpl=TEMPLATES.find(t=>t.id===genForm.type);
+    const doc=await callGroq([{role:"user",content:`Generate a professional ${tmpl?.full} between "${genForm.party1}" and "${genForm.party2}", duration: ${genForm.duration}, jurisdiction: ${genForm.jurisdiction}. Include all standard clauses, numbered sections, and a signatures block.`}],sys,apiKey,1500);
+    setGeneratedDoc(doc);setGenerating(false);
+  };
+
+  const handleChat=async()=>{
+    if(!chatInput.trim()||!apiKey)return;
+    const userMsg={role:"user",content:chatInput};
+    const newMsgs=[...chatMsgs,userMsg];
+    setChatMsgs(newMsgs);setChatInput("");setChatLoading(true);
+    const ctx=docText?`User's document context: "${docText.slice(0,400)}..."`:"";
+    const reply=await callGroq(newMsgs,`${sys} ${ctx} Answer clearly in plain English. Note you are not a licensed attorney. Keep answers under 130 words.`,apiKey);
+    setChatMsgs([...newMsgs,{role:"assistant",content:reply}]);setChatLoading(false);
+    setTimeout(()=>{if(chatRef.current)chatRef.current.scrollTop=chatRef.current.scrollHeight;},100);
+  };
+
+  const handleCopy=(text)=>{navigator.clipboard.writeText(text);setCopied(true);setTimeout(()=>setCopied(false),2000);};
+
+  return (
+    <div style={{minHeight:"100vh",background:"#03040d",color:"#e2e8f0",fontFamily:"'Georgia',serif"}}>
+
+      {/* HEADER */}
+      <div style={{borderBottom:"1px solid rgba(255,255,255,0.06)",padding:"14px 22px",display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(0,0,0,0.3)",position:"sticky",top:0,zIndex:10}}>
+        <div style={{display:"flex",alignItems:"center",gap:16}}>
+          <div>
+            <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:22,fontWeight:700,background:"linear-gradient(90deg,#a5b4fc,#818cf8)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>⚖ LexAI</h1>
+            <p style={{fontSize:9,color:"rgba(255,255,255,0.25)",fontFamily:"'JetBrains Mono',monospace",letterSpacing:2,marginTop:1}}>LEGAL INTELLIGENCE PLATFORM</p>
+          </div>
+          <div style={{height:32,width:1,background:"rgba(255,255,255,0.07)"}}/>
+          <div style={{display:"flex",gap:3,background:"rgba(255,255,255,0.03)",borderRadius:10,padding:3}}>
+            {[["analyze","🔍","Analyze"],["generate","📝","Generate"],["chat","💬","Chat"]].map(([k,ic,lbl])=>(
+              <button key={k} className={`tab ${tab===k?"on":""}`} onClick={()=>setTab(k)}>{ic} {lbl}</button>
+            ))}
+          </div>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          {docText&&<span style={{fontSize:9,color:"#22c55e",fontFamily:"'JetBrains Mono',monospace",background:"rgba(34,197,94,0.1)",border:"1px solid rgba(34,197,94,0.2)",borderRadius:6,padding:"3px 9px"}}>📄 DOC LOADED</span>}
+          <span style={{fontSize:9,color:"#22c55e",fontFamily:"'JetBrains Mono',monospace",background:"rgba(34,197,94,0.1)",border:"1px solid rgba(34,197,94,0.2)",borderRadius:6,padding:"3px 9px"}}>● LIVE</span>
+        </div>
+      </div>
+
+      <div style={{padding:"18px 22px 32px",maxWidth:1100,margin:"0 auto"}}>
+
+        {/* API KEY BANNER */}
+        <div className="api-banner">
+          <span style={{fontSize:11,color:"#818cf8",fontFamily:"'JetBrains Mono',monospace",whiteSpace:"nowrap"}}>🔑 GROQ API KEY</span>
+          <input className="api-input" type="password" placeholder="Paste your free Groq API key here → console.groq.com"
+            value={apiInput} onChange={e=>{setApiInput(e.target.value);setApiSaved(false);}}
+            onKeyDown={e=>e.key==="Enter"&&saveApiKey()}/>
+          <button className="api-save-btn" onClick={saveApiKey}>{apiSaved?"✓ Saved":"Save Key"}</button>
+          {!apiKey&&<span style={{fontSize:9,color:"rgba(255,100,100,0.7)",fontFamily:"'JetBrains Mono',monospace"}}>⚠ Add key to enable AI features</span>}
+        </div>
+
+        {/* ANALYZE TAB */}
+        {tab==="analyze"&&(
+          <div className="fi" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18}}>
+            <div style={{display:"flex",flexDirection:"column",gap:14}}>
+              <div className="card">
+                <div style={{fontSize:10,color:"rgba(255,255,255,0.35)",fontFamily:"'JetBrains Mono',monospace",letterSpacing:1,marginBottom:10}}>PASTE LEGAL DOCUMENT</div>
+                <textarea rows={8} placeholder="Paste any legal document here — contract, NDA, rental agreement, employment letter, terms of service…" value={docText} onChange={e=>setDocText(e.target.value)}/>
+              </div>
+
+              <div className="toolbar">
+                <div style={{width:"100%",fontSize:9,color:"rgba(255,255,255,0.3)",fontFamily:"'JetBrains Mono',monospace",letterSpacing:1,marginBottom:4}}>⚡ QUICK ACTIONS</div>
+                <ActionBtn icon="🔍" label="Full Analyze" onClick={handleAnalyze} disabled={!docText.trim()||analyzing||!apiKey} color="#6366f1"/>
+                <ActionBtn icon="📋" label="Summarize" onClick={handleSummarize} disabled={!docText.trim()||summarizing||!apiKey} color="#8b5cf6"/>
+                <ActionBtn icon="🧠" label="Simplify" onClick={handleSimplify} disabled={!docText.trim()||simplifying||!apiKey} color="#06b6d4"/>
+                <ActionBtn icon="🚩" label="Red Flags" onClick={handleRedFlags} disabled={!docText.trim()||redFlagging||!apiKey} color="#f43f5e"/>
+                <ActionBtn icon="🌐" label="Translate" onClick={()=>setShowTransPanel(p=>!p)} disabled={!docText.trim()||!apiKey} color="#10b981"/>
+                <ActionBtn icon="⚖" label="Compare" onClick={()=>setComparingPane(p=>!p)} disabled={!docText.trim()||!apiKey} color="#f59e0b"/>
+                {docText&&<ActionBtn icon="🗑" label="Clear" onClick={()=>{setDocText("");setAnalysis(null);setSummary("");setSimplifiedText("");setRedFlags([]);setTranslatedDoc("");setCompareResult("");}} color="#94a3b8" small/>}
+              </div>
+
+              {showTransPanel&&(
+                <div className="card" style={{borderColor:"rgba(16,185,129,0.2)",background:"rgba(16,185,129,0.05)"}}>
+                  <div style={{fontSize:10,color:"#10b981",fontFamily:"'JetBrains Mono',monospace",letterSpacing:1,marginBottom:10}}>🌐 TRANSLATE TO</div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:7,marginBottom:12}}>
+                    {["Tamil","Hindi","Telugu","Malayalam","Kannada","Bengali","Spanish","French"].map(l=>(
+                      <button key={l} className={`lang-chip ${transLang===l?"on":""}`} onClick={()=>setTransLang(l)}>{l}</button>
+                    ))}
+                  </div>
+                  <ActionBtn icon="🌐" label={`Translate to ${transLang}`} onClick={handleTranslate} disabled={translating} color="#10b981"/>
+                </div>
+              )}
+
+              {comparingPane&&(
+                <div className="card" style={{borderColor:"rgba(245,158,11,0.2)",background:"rgba(245,158,11,0.04)"}}>
+                  <div style={{fontSize:10,color:"#f59e0b",fontFamily:"'JetBrains Mono',monospace",letterSpacing:1,marginBottom:10}}>⚖ COMPARE WITH SECOND DOCUMENT</div>
+                  <textarea rows={5} placeholder="Paste second document here…" value={doc2Text} onChange={e=>setDoc2Text(e.target.value)} style={{marginBottom:10}}/>
+                  <ActionBtn icon="⚖" label="Compare Both Docs" onClick={handleCompare} disabled={!doc2Text.trim()||comparing} color="#f59e0b"/>
+                </div>
+              )}
+            </div>
+
+            <div style={{display:"flex",flexDirection:"column",gap:12}}>
+              {analyzing&&<Loader text="Running full legal analysis"/>}
+              {summarizing&&<Loader text="Summarizing document"/>}
+              {simplifying&&<Loader text="Simplifying legal language"/>}
+              {redFlagging&&<Loader text="Scanning for red flags"/>}
+              {translating&&<Loader text={`Translating to ${transLang}`}/>}
+              {comparing&&<Loader text="Comparing documents"/>}
+
+              {summary&&(
+                <div className="card" style={{borderColor:"rgba(139,92,246,0.2)"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                    <div style={{fontSize:10,color:"#8b5cf6",fontFamily:"'JetBrains Mono',monospace",letterSpacing:1}}>📋 PLAIN SUMMARY</div>
+                    <ActionBtn icon="📋" label="Copy" onClick={()=>handleCopy(summary)} color="#8b5cf6" small/>
+                  </div>
+                  <div className="result-box"><p style={{fontSize:13,lineHeight:1.75,color:"rgba(255,255,255,0.72)",whiteSpace:"pre-wrap"}}>{summary}</p></div>
+                </div>
+              )}
+
+              {simplifiedText&&(
+                <div className="card" style={{borderColor:"rgba(6,182,212,0.2)"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                    <div style={{fontSize:10,color:"#06b6d4",fontFamily:"'JetBrains Mono',monospace",letterSpacing:1}}>🧠 SIMPLIFIED VERSION</div>
+                    <ActionBtn icon="📋" label="Copy" onClick={()=>handleCopy(simplifiedText)} color="#06b6d4" small/>
+                  </div>
+                  <div className="result-box"><p style={{fontSize:13,lineHeight:1.75,color:"rgba(255,255,255,0.72)",whiteSpace:"pre-wrap"}}>{simplifiedText}</p></div>
+                </div>
+              )}
+
+              {redFlags.length>0&&(
+                <div className="card" style={{borderColor:"rgba(244,63,94,0.2)"}}>
+                  <div style={{fontSize:10,color:"#f43f5e",fontFamily:"'JetBrains Mono',monospace",letterSpacing:1,marginBottom:12}}>🚩 RED FLAG CLAUSES</div>
+                  {redFlags.map((rf,i)=>(
+                    <div key={i} style={{background:"rgba(244,63,94,0.06)",border:"1px solid rgba(244,63,94,0.16)",borderRadius:10,padding:"10px 12px",marginBottom:8}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
+                        <span style={{fontSize:12,fontWeight:600,color:"#fda4af"}}>{rf.flag}</span>
+                        <RiskBadge level={rf.severity}/>
+                      </div>
+                      <p style={{fontSize:11,color:"rgba(255,255,255,0.55)",lineHeight:1.5,fontFamily:"'JetBrains Mono',monospace"}}>{rf.detail}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {translatedDoc&&(
+                <div className="card" style={{borderColor:"rgba(16,185,129,0.2)"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                    <div style={{fontSize:10,color:"#10b981",fontFamily:"'JetBrains Mono',monospace",letterSpacing:1}}>🌐 TRANSLATED — {transLang.toUpperCase()}</div>
+                    <ActionBtn icon="📋" label="Copy" onClick={()=>handleCopy(translatedDoc)} color="#10b981" small/>
+                  </div>
+                  <div className="result-box"><p style={{fontSize:13,lineHeight:1.8,color:"rgba(255,255,255,0.72)",whiteSpace:"pre-wrap"}}>{translatedDoc}</p></div>
+                </div>
+              )}
+
+              {compareResult&&(
+                <div className="card" style={{borderColor:"rgba(245,158,11,0.2)"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                    <div style={{fontSize:10,color:"#f59e0b",fontFamily:"'JetBrains Mono',monospace",letterSpacing:1}}>⚖ COMPARISON RESULT</div>
+                    <ActionBtn icon="📋" label="Copy" onClick={()=>handleCopy(compareResult)} color="#f59e0b" small/>
+                  </div>
+                  <div className="result-box"><p style={{fontSize:13,lineHeight:1.75,color:"rgba(255,255,255,0.72)",whiteSpace:"pre-wrap"}}>{compareResult}</p></div>
+                </div>
+              )}
+
+              {analysis&&(
+                <div style={{display:"flex",flexDirection:"column",gap:12}}>
+                  <div className="card" style={{display:"flex",gap:14,alignItems:"center"}}>
+                    <div className="score-ring" style={{background:`conic-gradient(#6366f1 0%,#6366f1 ${analysis.score*10}%,rgba(255,255,255,0.05) ${analysis.score*10}%)`}}>
+                      <div className="score-inner">
+                        <div style={{fontSize:18,fontWeight:700,color:"#a5b4fc",fontFamily:"'Playfair Display',serif"}}>{analysis.score}</div>
+                        <div style={{fontSize:7,color:"rgba(255,255,255,0.3)",fontFamily:"'JetBrains Mono',monospace"}}>/10</div>
+                      </div>
+                    </div>
+                    <div style={{flex:1}}>
+                      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:7}}>
+                        <span style={{fontSize:10,fontFamily:"'JetBrains Mono',monospace",color:"rgba(255,255,255,0.4)"}}>Overall Risk</span>
+                        <RiskBadge level={analysis.riskLevel}/>
+                      </div>
+                      <p style={{fontSize:13,color:"rgba(255,255,255,0.68)",lineHeight:1.65}}>{analysis.summary}</p>
+                    </div>
+                  </div>
+                  {analysis.keyRisks?.length>0&&(
+                    <div className="card">
+                      <div style={{fontSize:10,color:"rgba(255,255,255,0.38)",fontFamily:"'JetBrains Mono',monospace",letterSpacing:1,marginBottom:10}}>⚠ RISK CLAUSES</div>
+                      {analysis.keyRisks.map((r,i)=>(
+                        <div key={i} style={{background:"rgba(255,255,255,0.022)",borderRadius:9,padding:"10px 12px",marginBottom:8}}>
+                          <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                            <span style={{fontSize:12,fontWeight:600}}>{r.clause}</span><RiskBadge level={r.level}/>
+                          </div>
+                          <p style={{fontSize:11,color:"rgba(255,255,255,0.5)",lineHeight:1.5,fontFamily:"'JetBrains Mono',monospace"}}>{r.risk}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                    {analysis.obligations?.length>0&&(
+                      <div className="card">
+                        <div style={{fontSize:9,color:"rgba(255,255,255,0.3)",fontFamily:"'JetBrains Mono',monospace",letterSpacing:1,marginBottom:8}}>YOUR OBLIGATIONS</div>
+                        <ul style={{paddingLeft:14}}>{analysis.obligations.map((o,i)=><li key={i} style={{fontSize:11,color:"rgba(255,255,255,0.55)",marginBottom:5,lineHeight:1.5}}>{o}</li>)}</ul>
+                      </div>
+                    )}
+                    {analysis.missingClauses?.length>0&&(
+                      <div className="card">
+                        <div style={{fontSize:9,color:"#f97316",fontFamily:"'JetBrains Mono',monospace",letterSpacing:1,marginBottom:8}}>MISSING CLAUSES</div>
+                        <ul style={{paddingLeft:14}}>{analysis.missingClauses.map((m,i)=><li key={i} style={{fontSize:11,color:"#fb923c",marginBottom:5,lineHeight:1.5}}>{m}</li>)}</ul>
+                      </div>
+                    )}
+                  </div>
+                  {analysis.recommendations?.length>0&&(
+                    <div className="card">
+                      <div style={{fontSize:10,color:"rgba(255,255,255,0.38)",fontFamily:"'JetBrains Mono',monospace",letterSpacing:1,marginBottom:10}}>✦ RECOMMENDATIONS</div>
+                      {analysis.recommendations.map((r,i)=>(
+                        <div key={i} style={{display:"flex",gap:9,marginBottom:8}}>
+                          <span style={{color:"#6366f1",fontSize:14}}>→</span>
+                          <p style={{fontSize:12,color:"rgba(255,255,255,0.6)",lineHeight:1.55}}>{r}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!analysis&&!summary&&!simplifiedText&&!redFlags.length&&!translatedDoc&&!compareResult&&!analyzing&&!summarizing&&!simplifying&&!redFlagging&&!translating&&!comparing&&(
+                <div style={{textAlign:"center",padding:"50px 20px",color:"rgba(255,255,255,0.15)"}}>
+                  <div style={{fontSize:44,marginBottom:12}}>⚖</div>
+                  <p style={{fontFamily:"'Playfair Display',serif",fontSize:16,fontStyle:"italic",marginBottom:5}}>Paste a document and pick an action.</p>
+                  <p style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,letterSpacing:1}}>Full analysis · Summary · Simplify · Red Flags · Translate · Compare</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* GENERATE TAB */}
+        {tab==="generate"&&(
+          <div className="fi" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18,maxWidth:900}}>
+            <div style={{display:"flex",flexDirection:"column",gap:14}}>
+              <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:22,fontWeight:400}}>Draft a Legal Document</h2>
+              <div className="card">
+                <div style={{fontSize:10,color:"rgba(255,255,255,0.35)",fontFamily:"'JetBrains Mono',monospace",letterSpacing:1,marginBottom:12}}>DOCUMENT TYPE</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                  {TEMPLATES.map(t=>(
+                    <button key={t.id} onClick={()=>setGenForm({...genForm,type:t.id})}
+                      style={{background:genForm.type===t.id?`${t.color}1a`:"rgba(255,255,255,0.03)",border:`1px solid ${genForm.type===t.id?t.color+"55":"rgba(255,255,255,0.07)"}`,borderRadius:11,padding:"12px 10px",cursor:"pointer",textAlign:"left",transition:"all 0.2s",boxShadow:genForm.type===t.id?`0 0 14px ${t.color}30`:"none"}}>
+                      <div style={{fontSize:20,marginBottom:5}}>{t.icon}</div>
+                      <div style={{fontSize:12,color:genForm.type===t.id?t.color:"#e2e8f0",fontFamily:"'JetBrains Mono',monospace"}}>{t.label}</div>
+                      <div style={{fontSize:9,color:"rgba(255,255,255,0.3)",marginTop:2}}>{t.full}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="card" style={{display:"flex",flexDirection:"column",gap:10}}>
+                <div style={{fontSize:10,color:"rgba(255,255,255,0.35)",fontFamily:"'JetBrains Mono',monospace",letterSpacing:1}}>DETAILS</div>
+                {[["party1","Party 1 — Name or Company"],["party2","Party 2 — Name or Company"]].map(([k,ph])=>(
+                  <input key={k} type="text" placeholder={ph} value={genForm[k]} onChange={e=>setGenForm({...genForm,[k]:e.target.value})}/>
+                ))}
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                  <select value={genForm.duration} onChange={e=>setGenForm({...genForm,duration:e.target.value})}>
+                    {["6 months","1 year","2 years","3 years","5 years","Indefinite"].map(d=><option key={d}>{d}</option>)}
+                  </select>
+                  <select value={genForm.jurisdiction} onChange={e=>setGenForm({...genForm,jurisdiction:e.target.value})}>
+                    {["India","USA","UK","UAE","Singapore","Australia","Canada"].map(j=><option key={j}>{j}</option>)}
+                  </select>
+                </div>
+              </div>
+              <button className="primary-btn" disabled={!genForm.party1||!genForm.party2||generating||!apiKey} onClick={handleGenerate}>
+                {generating?"⚙ Drafting Document…":"✦ Generate Document"}
+              </button>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:14}}>
+              {generating&&<Loader text="Drafting your document"/>}
+              {generatedDoc?(
+                <div className="card" style={{display:"flex",flexDirection:"column"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+                    <div style={{fontSize:10,color:"rgba(255,255,255,0.38)",fontFamily:"'JetBrains Mono',monospace",letterSpacing:1}}>GENERATED DOCUMENT</div>
+                    <div style={{display:"flex",gap:8}}>
+                      <ActionBtn icon={copied?"✓":"📋"} label={copied?"Copied":"Copy"} onClick={()=>handleCopy(generatedDoc)} color="#6366f1" small/>
+                      <ActionBtn icon="🔍" label="Analyze It" onClick={()=>{setDocText(generatedDoc);setTab("analyze");}} color="#10b981" small/>
+                    </div>
+                  </div>
+                  <div style={{background:"rgba(255,255,255,0.02)",borderRadius:10,padding:13,overflowY:"auto",maxHeight:460}}>
+                    <pre style={{fontSize:11,lineHeight:1.75,color:"rgba(255,255,255,0.68)",whiteSpace:"pre-wrap",fontFamily:"'JetBrains Mono',monospace"}}>{generatedDoc}</pre>
+                  </div>
+                  <p style={{fontSize:10,color:"rgba(255,255,255,0.2)",fontFamily:"'JetBrains Mono',monospace",marginTop:10,lineHeight:1.6}}>⚠ Template only. Have a licensed attorney review before signing.</p>
+                </div>
+              ):!generating&&(
+                <div style={{textAlign:"center",padding:"60px 20px",color:"rgba(255,255,255,0.15)"}}>
+                  <div style={{fontSize:44,marginBottom:12}}>📝</div>
+                  <p style={{fontFamily:"'Playfair Display',serif",fontSize:15,fontStyle:"italic"}}>Fill in the details and generate your document.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* CHAT TAB */}
+        {tab==="chat"&&(
+          <div className="fi" style={{maxWidth:800,display:"flex",flexDirection:"column",height:"calc(100vh - 200px)"}}>
+            <div style={{marginBottom:14}}>
+              <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:22,fontWeight:400}}>Ask LexAI Anything</h2>
+              <p style={{fontSize:9,color:"rgba(255,255,255,0.28)",fontFamily:"'JetBrains Mono',monospace",marginTop:3}}>General legal information — not legal advice. Consult a qualified attorney for binding decisions.</p>
+            </div>
+            <div ref={chatRef} style={{flex:1,overflowY:"auto",display:"flex",flexDirection:"column",gap:10,paddingBottom:10}}>
+              {!chatMsgs.length&&(
+                <div style={{textAlign:"center",padding:"40px 20px",color:"rgba(255,255,255,0.18)"}}>
+                  <div style={{fontSize:42,marginBottom:12}}>⚖</div>
+                  <p style={{fontFamily:"'Playfair Display',serif",fontSize:16,fontStyle:"italic",marginBottom:4}}>Legal clarity, instantly.</p>
+                  <p style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:1,marginBottom:18}}>Ask about clauses, rights, obligations, or any legal concept.</p>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:7,justifyContent:"center"}}>
+                    {["What does indemnification mean?","Is this clause enforceable?","What are my termination rights?","Explain force majeure"].map(s=>(
+                      <button key={s} className="quick-btn" onClick={()=>setChatInput(s)}>{s}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {chatMsgs.map((m,i)=>(
+                <div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start",alignItems:"flex-start",gap:8}}>
+                  {m.role==="assistant"&&<div style={{fontSize:16,marginTop:3}}>⚖</div>}
+                  <div style={{maxWidth:"78%",padding:"11px 15px",borderRadius:m.role==="user"?"14px 14px 3px 14px":"14px 14px 14px 3px",background:m.role==="user"?"rgba(99,102,241,0.22)":"rgba(255,255,255,0.05)",border:`1px solid ${m.role==="user"?"rgba(99,102,241,0.35)":"rgba(255,255,255,0.07)"}`,fontSize:13,lineHeight:1.7}}>
+                    {m.content}
+                  </div>
+                </div>
+              ))}
+              {chatLoading&&(
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <div style={{fontSize:16}}>⚖</div>
+                  <div style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:"14px 14px 14px 3px",padding:"11px 16px",fontFamily:"'JetBrains Mono',monospace",fontSize:17,letterSpacing:4,color:"rgba(255,255,255,0.35)",animation:"spin 1s linear infinite"}}>···</div>
+                </div>
+              )}
+            </div>
+            <div style={{display:"flex",gap:8,paddingTop:10,borderTop:"1px solid rgba(255,255,255,0.05)"}}>
+              <input className="chat-input" placeholder={apiKey?"Ask about a clause, your rights, legal definitions…":"⚠ Add your Groq API key above first"} value={chatInput}
+                onChange={e=>setChatInput(e.target.value)}
+                onKeyDown={e=>e.key==="Enter"&&!chatLoading&&handleChat()}/>
+              <button className="send" onClick={handleChat} disabled={chatLoading||!chatInput.trim()||!apiKey}>→</button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div style={{textAlign:"center",padding:"0 0 18px",fontSize:9,color:"rgba(255,255,255,0.1)",fontFamily:"'JetBrains Mono',monospace",letterSpacing:2}}>
+        LEXAI · AI LEGAL INTELLIGENCE · NOT A SUBSTITUTE FOR LEGAL COUNSEL
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
